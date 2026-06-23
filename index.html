@@ -2,9 +2,9 @@
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>あといくら</title>
-    <meta name="description" content="毎月の収入と支出から、残り使える金額を確認できる家計メモアプリ。" />
+    <meta name="description" content="12日始まりの生活月ごとに、収入・固定費・支出から残り使える金額を確認できる家計メモアプリ。" />
     <meta name="theme-color" content="#08765e" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="あといくら" />
@@ -16,18 +16,20 @@
   </head>
   <body>
     <main class="app-shell">
-      <section class="topbar" aria-label="月の切り替え">
+      <section class="topbar" aria-label="期間の切り替え">
         <div>
-          <p class="eyebrow">Monthly Wallet</p>
+          <p class="eyebrow">12日始まりの家計メモ</p>
           <h1>あといくら</h1>
         </div>
         <label class="month-picker">
-          <span>対象月</span>
+          <span>対象期間</span>
           <input id="monthInput" type="month" />
         </label>
       </section>
 
-      <section class="summary-grid" aria-label="今月の集計">
+      <p id="periodLabel" class="period-label">毎月12日〜翌月11日で計算します</p>
+
+      <section class="summary-grid" aria-label="期間の集計">
         <article class="balance-card primary">
           <div class="card-head">
             <span>残り使える金額</span>
@@ -51,6 +53,11 @@
         </article>
 
         <article class="balance-card">
+          <span>固定費</span>
+          <strong id="fixedAmount">¥0</strong>
+        </article>
+
+        <article class="balance-card">
           <span>使った金額</span>
           <strong id="spentAmount">¥0</strong>
         </article>
@@ -60,13 +67,32 @@
         <form id="incomeForm" class="panel" autocomplete="off">
           <div class="panel-title">
             <h2>収入</h2>
-            <button id="clearMonthButton" class="ghost-button" type="button">この月を空にする</button>
+            <button id="clearMonthButton" class="ghost-button" type="button">この期間を空にする</button>
           </div>
           <label>
-            <span>今月の収入</span>
-            <input id="incomeInput" inputmode="numeric" type="text" placeholder="例 250000" />
+            <span>この期間の収入</span>
+            <input id="incomeInput" inputmode="numeric" pattern="[0-9]*" type="text" placeholder="例 250000" enterkeyhint="done" />
           </label>
           <button class="main-button" type="submit">収入を保存</button>
+        </form>
+
+        <form id="fixedCostForm" class="panel" autocomplete="off">
+          <div class="panel-title">
+            <h2>固定費</h2>
+            <span id="fixedCostCount" class="entry-count">0件</span>
+          </div>
+          <div class="field-row">
+            <label>
+              <span>内容</span>
+              <input id="fixedCostNameInput" type="text" placeholder="例 家賃" maxlength="28" enterkeyhint="next" />
+            </label>
+            <label>
+              <span>金額</span>
+              <input id="fixedCostAmountInput" inputmode="numeric" pattern="[0-9]*" type="text" placeholder="例 70000" enterkeyhint="done" />
+            </label>
+          </div>
+          <button class="main-button" type="submit">固定費を追加</button>
+          <div id="fixedCostList" class="mini-list" aria-label="固定費一覧"></div>
         </form>
 
         <form id="expenseForm" class="panel" autocomplete="off">
@@ -76,12 +102,18 @@
           <div class="field-row">
             <label>
               <span>内容</span>
-              <input id="expenseNameInput" type="text" placeholder="例 スーパー" maxlength="28" />
+              <input id="expenseNameInput" type="text" placeholder="例 スーパー" maxlength="28" enterkeyhint="next" />
             </label>
             <label>
               <span>金額</span>
-              <input id="expenseAmountInput" inputmode="numeric" type="text" placeholder="例 3200" />
+              <input id="expenseAmountInput" inputmode="numeric" pattern="[0-9]*" type="text" placeholder="例 3200" enterkeyhint="done" />
             </label>
+          </div>
+          <div class="quick-amounts" aria-label="よく使う金額">
+            <button type="button" data-quick-amount="500">¥500</button>
+            <button type="button" data-quick-amount="1000">¥1,000</button>
+            <button type="button" data-quick-amount="3000">¥3,000</button>
+            <button type="button" data-quick-amount="5000">¥5,000</button>
           </div>
           <div class="field-row">
             <label>
@@ -95,7 +127,7 @@
                 <option>日用品</option>
                 <option>交通</option>
                 <option>趣味</option>
-                <option>固定費</option>
+                <option>固定費以外</option>
                 <option>その他</option>
               </select>
             </label>
@@ -106,7 +138,7 @@
 
       <section class="panel table-panel">
         <div class="panel-title">
-          <h2>履歴</h2>
+          <h2>支出履歴</h2>
           <span id="entryCount" class="entry-count">0件</span>
         </div>
         <div id="emptyState" class="empty-state">
@@ -137,10 +169,10 @@
 
     <template id="expenseRowTemplate">
       <tr>
-        <td data-cell="date"></td>
-        <td data-cell="name"></td>
-        <td><span data-cell="category" class="category-pill"></span></td>
-        <td data-cell="amount" class="amount-cell"></td>
+        <td data-cell="date" data-label="日付"></td>
+        <td data-cell="name" data-label="内容"></td>
+        <td data-label="種類"><span data-cell="category" class="category-pill"></span></td>
+        <td data-cell="amount" data-label="金額" class="amount-cell"></td>
         <td class="action-cell">
           <button class="icon-button danger" type="button" aria-label="削除" title="削除">
             <svg viewBox="0 0 24 24" aria-hidden="true">

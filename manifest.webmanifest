@@ -1,7 +1,7 @@
 {
   "name": "あといくら",
   "short_name": "あといくら",
-  "description": "毎月の収入と支出から、残り使える金額を確認できる家計メモアプリ。",
+  "description": "12日始まりの生活月ごとに、収入・固定費・支出から残り使える金額を確認できる家計メモアプリ。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

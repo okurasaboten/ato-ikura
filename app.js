@@ -1,17 +1,26 @@
 const storageKey = "ato-ikura-months";
+const fixedCostsKey = "__fixedCosts";
 
 const monthInput = document.querySelector("#monthInput");
+const periodLabel = document.querySelector("#periodLabel");
 const incomeForm = document.querySelector("#incomeForm");
 const incomeInput = document.querySelector("#incomeInput");
+const fixedCostForm = document.querySelector("#fixedCostForm");
+const fixedCostNameInput = document.querySelector("#fixedCostNameInput");
+const fixedCostAmountInput = document.querySelector("#fixedCostAmountInput");
+const fixedCostList = document.querySelector("#fixedCostList");
+const fixedCostCount = document.querySelector("#fixedCostCount");
 const expenseForm = document.querySelector("#expenseForm");
 const expenseNameInput = document.querySelector("#expenseNameInput");
 const expenseAmountInput = document.querySelector("#expenseAmountInput");
 const expenseDateInput = document.querySelector("#expenseDateInput");
 const expenseCategoryInput = document.querySelector("#expenseCategoryInput");
+const quickAmountButtons = document.querySelectorAll("[data-quick-amount]");
 const clearMonthButton = document.querySelector("#clearMonthButton");
 const copyBalanceButton = document.querySelector("#copyBalanceButton");
 const remainingAmount = document.querySelector("#remainingAmount");
 const incomeAmount = document.querySelector("#incomeAmount");
+const fixedAmount = document.querySelector("#fixedAmount");
 const spentAmount = document.querySelector("#spentAmount");
 const spentMeter = document.querySelector("#spentMeter");
 const balanceTone = document.querySelector("#balanceTone");
@@ -22,18 +31,47 @@ const tablePanel = document.querySelector(".table-panel");
 
 let state = loadState();
 
-function monthKeyFromDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  return `${year}-${month}`;
+function pad(value) {
+  return String(value).padStart(2, "0");
+}
+
+function dateValue(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function monthValue(date) {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+}
+
+function dateFromParts(year, monthIndex, day) {
+  return new Date(year, monthIndex, day);
+}
+
+function periodKeyFromDate(date) {
+  const start = date.getDate() >= 12
+    ? dateFromParts(date.getFullYear(), date.getMonth(), 12)
+    : dateFromParts(date.getFullYear(), date.getMonth() - 1, 12);
+  return monthValue(start);
+}
+
+function periodStartDate(periodKey) {
+  const [year, month] = periodKey.split("-").map(Number);
+  return dateFromParts(year, month - 1, 12);
+}
+
+function periodEndDate(periodKey) {
+  const [year, month] = periodKey.split("-").map(Number);
+  return dateFromParts(year, month, 11);
+}
+
+function formatPeriodLabel(periodKey) {
+  const start = periodStartDate(periodKey);
+  const end = periodEndDate(periodKey);
+  return `${start.getFullYear()}年${start.getMonth() + 1}月12日〜${end.getFullYear()}年${end.getMonth() + 1}月11日`;
 }
 
 function todayValue() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return dateValue(new Date());
 }
 
 function createId() {
@@ -44,15 +82,27 @@ function createId() {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function getCurrentMonth() {
+function getCurrentPeriod() {
   return monthInput.value;
 }
 
-function getMonthData(month) {
-  if (!state[month]) {
-    state[month] = { income: 0, expenses: [] };
+function getPeriodData(periodKey) {
+  if (!state[periodKey] || Array.isArray(state[periodKey])) {
+    state[periodKey] = { income: 0, expenses: [] };
   }
-  return state[month];
+
+  if (!Array.isArray(state[periodKey].expenses)) {
+    state[periodKey].expenses = [];
+  }
+
+  return state[periodKey];
+}
+
+function getFixedCosts() {
+  if (!Array.isArray(state[fixedCostsKey])) {
+    state[fixedCostsKey] = [];
+  }
+  return state[fixedCostsKey];
 }
 
 function loadState() {
@@ -73,6 +123,10 @@ function parseMoney(value) {
   return Number.isFinite(number) ? Math.max(0, Math.round(number)) : 0;
 }
 
+function formatInputMoney(value) {
+  return value ? new Intl.NumberFormat("ja-JP").format(value) : "";
+}
+
 function formatMoney(value) {
   return new Intl.NumberFormat("ja-JP", {
     style: "currency",
@@ -89,26 +143,33 @@ function formatShortDate(value) {
   }).format(date);
 }
 
-function totalsFor(monthData) {
-  const spent = monthData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+function totalsFor(periodData) {
+  const fixedTotal = getFixedCosts().reduce((sum, item) => sum + item.amount, 0);
+  const spent = periodData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+
   return {
-    income: monthData.income,
+    income: periodData.income,
+    fixed: fixedTotal,
     spent,
-    remaining: monthData.income - spent,
+    used: fixedTotal + spent,
+    remaining: periodData.income - fixedTotal - spent,
   };
 }
 
 function render() {
-  const monthData = getMonthData(getCurrentMonth());
-  const totals = totalsFor(monthData);
-  const ratio = totals.income > 0 ? Math.min(100, (totals.spent / totals.income) * 100) : 0;
+  const periodKey = getCurrentPeriod();
+  const periodData = getPeriodData(periodKey);
+  const totals = totalsFor(periodData);
+  const ratio = totals.income > 0 ? Math.min(100, (totals.used / totals.income) * 100) : 0;
 
-  incomeInput.value = monthData.income ? String(monthData.income) : "";
+  periodLabel.textContent = formatPeriodLabel(periodKey);
+  incomeInput.value = formatInputMoney(periodData.income);
   remainingAmount.textContent = formatMoney(totals.remaining);
   incomeAmount.textContent = formatMoney(totals.income);
+  fixedAmount.textContent = formatMoney(totals.fixed);
   spentAmount.textContent = formatMoney(totals.spent);
   spentMeter.style.width = `${ratio}%`;
-  entryCount.textContent = `${monthData.expenses.length}件`;
+  entryCount.textContent = `${periodData.expenses.length}件`;
 
   if (totals.income === 0) {
     balanceTone.textContent = "収入を入力すると表示されます";
@@ -122,7 +183,39 @@ function render() {
     balanceTone.textContent = "まだ余裕があります";
   }
 
-  renderExpenses(monthData.expenses);
+  renderFixedCosts();
+  renderExpenses(periodData.expenses);
+}
+
+function renderFixedCosts() {
+  const fixedCosts = getFixedCosts();
+  fixedCostCount.textContent = `${fixedCosts.length}件`;
+  fixedCostList.replaceChildren();
+
+  if (fixedCosts.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "mini-empty";
+    empty.textContent = "固定費はまだありません";
+    fixedCostList.append(empty);
+    return;
+  }
+
+  fixedCosts.forEach((item) => {
+    const row = document.createElement("div");
+    row.className = "mini-row";
+
+    const text = document.createElement("span");
+    text.textContent = `${item.name} ${formatMoney(item.amount)}`;
+
+    const button = document.createElement("button");
+    button.className = "mini-delete";
+    button.type = "button";
+    button.textContent = "削除";
+    button.addEventListener("click", () => deleteFixedCost(item.id));
+
+    row.append(text, button);
+    fixedCostList.append(row);
+  });
 }
 
 function renderExpenses(expenses) {
@@ -143,27 +236,56 @@ function renderExpenses(expenses) {
 }
 
 function deleteExpense(id) {
-  const monthData = getMonthData(getCurrentMonth());
-  monthData.expenses = monthData.expenses.filter((expense) => expense.id !== id);
+  const periodData = getPeriodData(getCurrentPeriod());
+  periodData.expenses = periodData.expenses.filter((expense) => expense.id !== id);
   saveState();
   render();
 }
 
-monthInput.value = monthKeyFromDate(new Date());
+function deleteFixedCost(id) {
+  state[fixedCostsKey] = getFixedCosts().filter((item) => item.id !== id);
+  saveState();
+  render();
+}
+
+monthInput.value = periodKeyFromDate(new Date());
 expenseDateInput.value = todayValue();
 
 monthInput.addEventListener("change", () => {
-  const firstDay = `${getCurrentMonth()}-01`;
-  expenseDateInput.value = firstDay;
+  expenseDateInput.value = dateValue(periodStartDate(getCurrentPeriod()));
   render();
 });
 
 incomeForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  const monthData = getMonthData(getCurrentMonth());
-  monthData.income = parseMoney(incomeInput.value);
+  const periodData = getPeriodData(getCurrentPeriod());
+  periodData.income = parseMoney(incomeInput.value);
   saveState();
   render();
+});
+
+fixedCostForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const amount = parseMoney(fixedCostAmountInput.value);
+  const name = fixedCostNameInput.value.trim() || "固定費";
+
+  if (amount <= 0) {
+    fixedCostAmountInput.focus();
+    return;
+  }
+
+  getFixedCosts().push({
+    id: createId(),
+    name,
+    amount,
+    createdAt: Date.now(),
+  });
+
+  fixedCostNameInput.value = "";
+  fixedCostAmountInput.value = "";
+  saveState();
+  render();
+  fixedCostNameInput.focus();
 });
 
 expenseForm.addEventListener("submit", (event) => {
@@ -176,16 +298,19 @@ expenseForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const monthData = getMonthData(getCurrentMonth());
-  monthData.expenses.push({
+  const expenseDate = expenseDateInput.value || todayValue();
+  const targetPeriod = periodKeyFromDate(new Date(`${expenseDate}T00:00:00`));
+  const periodData = getPeriodData(targetPeriod);
+  periodData.expenses.push({
     id: createId(),
     name,
     amount,
-    date: expenseDateInput.value || todayValue(),
+    date: expenseDate,
     category: expenseCategoryInput.value,
     createdAt: Date.now(),
   });
 
+  monthInput.value = targetPeriod;
   expenseNameInput.value = "";
   expenseAmountInput.value = "";
   expenseDateInput.value = todayValue();
@@ -194,24 +319,33 @@ expenseForm.addEventListener("submit", (event) => {
   expenseNameInput.focus();
 });
 
+quickAmountButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const current = parseMoney(expenseAmountInput.value);
+    const next = current + Number(button.dataset.quickAmount);
+    expenseAmountInput.value = formatInputMoney(next);
+    expenseAmountInput.focus();
+  });
+});
+
 clearMonthButton.addEventListener("click", () => {
-  const month = getCurrentMonth();
-  const monthData = getMonthData(month);
-  const hasData = monthData.income > 0 || monthData.expenses.length > 0;
+  const periodKey = getCurrentPeriod();
+  const periodData = getPeriodData(periodKey);
+  const hasData = periodData.income > 0 || periodData.expenses.length > 0;
 
   if (!hasData) {
     return;
   }
 
-  if (confirm("この月の収入と支出をすべて削除しますか？")) {
-    delete state[month];
+  if (confirm("この期間の収入と支出履歴をすべて削除しますか？固定費の設定は残ります。")) {
+    delete state[periodKey];
     saveState();
     render();
   }
 });
 
 copyBalanceButton.addEventListener("click", async () => {
-  const totals = totalsFor(getMonthData(getCurrentMonth()));
+  const totals = totalsFor(getPeriodData(getCurrentPeriod()));
   const text = `残り使える金額: ${formatMoney(totals.remaining)}`;
 
   try {
