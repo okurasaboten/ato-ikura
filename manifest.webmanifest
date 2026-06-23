@@ -1,0 +1,18 @@
+{
+  "name": "あといくら",
+  "short_name": "あといくら",
+  "description": "毎月の収入と支出から、残り使える金額を確認できる家計メモアプリ。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fbf7",
+  "theme_color": "#08765e",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

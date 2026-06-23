@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>あといくら</title>
+    <meta name="description" content="毎月の収入と支出から、残り使える金額を確認できる家計メモアプリ。" />
+    <meta name="theme-color" content="#08765e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="あといくら" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar" aria-label="月の切り替え">
+        <div>
+          <p class="eyebrow">Monthly Wallet</p>
+          <h1>あといくら</h1>
+        </div>
+        <label class="month-picker">
+          <span>対象月</span>
+          <input id="monthInput" type="month" />
+        </label>
+      </section>
+
+      <section class="summary-grid" aria-label="今月の集計">
+        <article class="balance-card primary">
+          <div class="card-head">
+            <span>残り使える金額</span>
+            <button id="copyBalanceButton" class="icon-button" type="button" aria-label="残額をコピー" title="残額をコピー">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 8h10v12H8z" />
+                <path d="M6 16H4V4h12v2" />
+              </svg>
+            </button>
+          </div>
+          <strong id="remainingAmount">¥0</strong>
+          <div class="meter" aria-hidden="true">
+            <span id="spentMeter"></span>
+          </div>
+          <p id="balanceTone" class="tone">収入を入力すると表示されます</p>
+        </article>
+
+        <article class="balance-card">
+          <span>収入</span>
+          <strong id="incomeAmount">¥0</strong>
+        </article>
+
+        <article class="balance-card">
+          <span>使った金額</span>
+          <strong id="spentAmount">¥0</strong>
+        </article>
+      </section>
+
+      <section class="workspace-grid">
+        <form id="incomeForm" class="panel" autocomplete="off">
+          <div class="panel-title">
+            <h2>収入</h2>
+            <button id="clearMonthButton" class="ghost-button" type="button">この月を空にする</button>
+          </div>
+          <label>
+            <span>今月の収入</span>
+            <input id="incomeInput" inputmode="numeric" type="text" placeholder="例 250000" />
+          </label>
+          <button class="main-button" type="submit">収入を保存</button>
+        </form>
+
+        <form id="expenseForm" class="panel" autocomplete="off">
+          <div class="panel-title">
+            <h2>使ったお金</h2>
+          </div>
+          <div class="field-row">
+            <label>
+              <span>内容</span>
+              <input id="expenseNameInput" type="text" placeholder="例 スーパー" maxlength="28" />
+            </label>
+            <label>
+              <span>金額</span>
+              <input id="expenseAmountInput" inputmode="numeric" type="text" placeholder="例 3200" />
+            </label>
+          </div>
+          <div class="field-row">
+            <label>
+              <span>日付</span>
+              <input id="expenseDateInput" type="date" />
+            </label>
+            <label>
+              <span>種類</span>
+              <select id="expenseCategoryInput">
+                <option>食費</option>
+                <option>日用品</option>
+                <option>交通</option>
+                <option>趣味</option>
+                <option>固定費</option>
+                <option>その他</option>
+              </select>
+            </label>
+          </div>
+          <button class="main-button" type="submit">支出を追加</button>
+        </form>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-title">
+          <h2>履歴</h2>
+          <span id="entryCount" class="entry-count">0件</span>
+        </div>
+        <div id="emptyState" class="empty-state">
+          <svg viewBox="0 0 320 180" role="img" aria-label="支出履歴なし">
+            <rect x="34" y="28" width="252" height="124" rx="18" />
+            <path d="M74 70h118M74 94h172M74 118h82" />
+            <circle cx="236" cy="74" r="22" />
+            <path d="M225 75l8 8 18-21" />
+          </svg>
+          <p>まだ記録がありません</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>日付</th>
+                <th>内容</th>
+                <th>種類</th>
+                <th class="amount-cell">金額</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <template id="expenseRowTemplate">
+      <tr>
+        <td data-cell="date"></td>
+        <td data-cell="name"></td>
+        <td><span data-cell="category" class="category-pill"></span></td>
+        <td data-cell="amount" class="amount-cell"></td>
+        <td class="action-cell">
+          <button class="icon-button danger" type="button" aria-label="削除" title="削除">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16" />
+              <path d="M10 11v6M14 11v6" />
+              <path d="M6 7l1 14h10l1-14" />
+              <path d="M9 7V4h6v3" />
+            </svg>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
