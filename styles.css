@@ -10,6 +10,9 @@
   --coral: #e56b55;
   --gold: #c58a13;
   --sky: #407fbd;
+  --income: #2878c9;
+  --fixed: #b97912;
+  --expense: #d9503f;
   --shadow: 0 18px 42px rgba(32, 45, 41, 0.12);
 }
 
@@ -164,6 +167,67 @@ select:focus {
   overflow-wrap: anywhere;
 }
 
+.hero-amount {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.hero-amount strong {
+  margin-top: 0;
+}
+
+.amount-icon,
+.budget-icon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+}
+
+.amount-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #bff5e6;
+}
+
+.amount-icon svg,
+.budget-icon svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.summary-grid .balance-card:nth-child(2) {
+  border-top: 5px solid var(--income);
+}
+
+.summary-grid .balance-card:nth-child(3) {
+  border-top: 5px solid var(--fixed);
+}
+
+.summary-grid .balance-card:nth-child(4) {
+  border-top: 5px solid var(--expense);
+}
+
+.summary-grid .balance-card:nth-child(2) strong {
+  color: var(--income);
+}
+
+.summary-grid .balance-card:nth-child(3) strong {
+  color: var(--fixed);
+}
+
+.summary-grid .balance-card:nth-child(4) strong {
+  color: var(--expense);
+}
+
 .card-head,
 .panel-title {
   display: flex;
@@ -203,6 +267,174 @@ select:focus {
   font-size: 14px;
 }
 
+.mascot-talk {
+  display: grid;
+  grid-template-columns: 68px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.mascot-face {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.42);
+  border-radius: 20px;
+  background: #121014;
+  box-shadow:
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 0 0 4px rgba(255, 255, 255, 0.08);
+  transform-origin: 50% 100%;
+}
+
+.mascot-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 56% 20%;
+  transform: scale(1.2);
+}
+
+.mascot-face.happy {
+  animation: mascot-breathe 2400ms ease-in-out infinite;
+}
+
+.mascot-talk p {
+  position: relative;
+  margin: 0;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.mascot-talk p::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 18px;
+  border-top: 7px solid transparent;
+  border-right: 7px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 7px solid transparent;
+}
+
+@keyframes mascot-breathe {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-2px) rotate(-1deg);
+  }
+}
+
+.food-budget-panel {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 14px;
+  border: 1px solid rgba(217, 224, 220, 0.85);
+  border-left: 5px solid var(--expense);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+}
+
+.food-budget-panel div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.food-budget-panel span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.budget-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.budget-icon {
+  width: 34px;
+  height: 34px;
+  background: #fff0ed;
+  color: var(--expense);
+}
+
+.food-budget-panel strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.food-budget-panel strong.over-budget {
+  color: #c53224;
+}
+
+.food-meter {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #f3ddd8;
+}
+
+.food-meter span {
+  display: block;
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #66b58f, #efbd55, #d9503f);
+}
+
+.celebrate {
+  animation: soft-pop 520ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+.celebrate .amount-icon,
+.celebrate .budget-icon {
+  animation: icon-wiggle 520ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+@keyframes soft-pop {
+  0% {
+    transform: scale(1);
+    box-shadow: var(--shadow);
+  }
+  38% {
+    transform: scale(1.018);
+    box-shadow: 0 22px 50px rgba(21, 162, 123, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: var(--shadow);
+  }
+}
+
+@keyframes icon-wiggle {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-7deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(5deg) scale(1.02);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(220px, 0.8fr) minmax(260px, 1fr) minmax(300px, 1.2fr);
@@ -224,6 +456,33 @@ select:focus {
 
 .panel {
   padding: 18px;
+}
+
+.income-panel {
+  border-top: 5px solid var(--income);
+}
+
+.income-panel .main-button {
+  background: var(--income);
+  box-shadow: 0 12px 24px rgba(40, 120, 201, 0.2);
+}
+
+.fixed-panel {
+  border-top: 5px solid var(--fixed);
+}
+
+.fixed-panel .main-button {
+  background: var(--fixed);
+  box-shadow: 0 12px 24px rgba(185, 121, 18, 0.2);
+}
+
+.expense-panel {
+  border-top: 5px solid var(--expense);
+}
+
+.expense-panel .main-button {
+  background: var(--expense);
+  box-shadow: 0 12px 24px rgba(217, 80, 63, 0.2);
 }
 
 .panel form {
@@ -328,8 +587,6 @@ form {
 .mini-list {
   display: grid;
   gap: 8px;
-  max-height: 170px;
-  overflow: auto;
 }
 
 .mini-row {
@@ -402,6 +659,19 @@ td {
 th {
   color: var(--muted);
   font-size: 12px;
+}
+
+tr {
+  cursor: pointer;
+}
+
+tr .category-pill,
+tr .action-cell {
+  cursor: auto;
+}
+
+tr.is-open {
+  background: #fbfdfb;
 }
 
 .amount-cell {
@@ -539,9 +809,20 @@ th {
   }
 
   .summary-grid,
-  .workspace-grid {
+  .workspace-grid,
+  .food-budget-panel {
     gap: 10px;
     margin-bottom: 10px;
+  }
+
+  .food-budget-panel {
+    padding: 12px;
+  }
+
+  .food-budget-panel div:first-child {
+    align-items: start;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .balance-card.primary {
@@ -551,6 +832,26 @@ th {
 
   .balance-card.primary strong {
     font-size: 42px;
+  }
+
+  .hero-amount {
+    gap: 10px;
+  }
+
+  .amount-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .mascot-talk {
+    grid-template-columns: 58px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mascot-face {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
   }
 
   .balance-card:not(.primary) {
@@ -619,6 +920,16 @@ th {
     padding: 10px;
   }
 
+  tr td[data-label="種類"],
+  tr .action-cell {
+    display: none;
+  }
+
+  tr.is-open td[data-label="種類"],
+  tr.is-open .action-cell {
+    display: flex;
+  }
+
   td {
     display: flex;
     align-items: center;
@@ -655,6 +966,15 @@ th {
     width: 100%;
     height: 42px;
     background: #fff0ed;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebrate,
+  .celebrate .amount-icon,
+  .celebrate .budget-icon,
+  .mascot-face.happy {
+    animation: none;
   }
 }
 

@@ -1,11 +1,12 @@
-const cacheName = "ato-ikura-v5";
+const cacheName = "ato-ikura-v11";
 const filesToCache = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
   "./manifest.webmanifest",
-  "./icon.svg"
+  "./icon.svg",
+  "./mascot.jpg"
 ];
 
 self.addEventListener("install", (event) => {

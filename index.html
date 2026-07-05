@@ -40,11 +40,26 @@
               </svg>
             </button>
           </div>
-          <strong id="remainingAmount">¥0</strong>
+          <div class="hero-amount">
+            <span class="amount-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 7.5h14.5A2.5 2.5 0 0 1 21 10v7a2.5 2.5 0 0 1-2.5 2.5h-12A3.5 3.5 0 0 1 3 16V7.5A3 3 0 0 1 6 4.5h11" />
+                <path d="M16 13h5" />
+                <path d="M7 8h9" />
+              </svg>
+            </span>
+            <strong id="remainingAmount">¥0</strong>
+          </div>
           <div class="meter" aria-hidden="true">
             <span id="spentMeter"></span>
           </div>
           <p id="balanceTone" class="tone">収入を入力すると表示されます</p>
+          <div class="mascot-talk" aria-live="polite">
+            <div id="mascotFace" class="mascot-face" aria-hidden="true">
+              <img src="mascot.jpg" alt="" />
+            </div>
+            <p id="mascotMessage">まずは収入を入れてみよう</p>
+          </div>
         </article>
 
         <article class="balance-card">
@@ -63,8 +78,28 @@
         </article>
       </section>
 
+      <section class="food-budget-panel" aria-label="食費予算">
+        <div>
+          <span class="budget-label">
+            <span class="budget-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 13a8 8 0 0 0 16 0Z" />
+                <path d="M7 13a5 5 0 0 1 10 0" />
+                <path d="M6 20h12" />
+                <path d="M9 8V4M12 8V4M15 8V4" />
+              </svg>
+            </span>
+            食費予算
+          </span>
+          <strong id="foodBudgetStatus">¥0 / ¥10,000</strong>
+        </div>
+        <div class="food-meter" aria-hidden="true">
+          <span id="foodBudgetMeter"></span>
+        </div>
+      </section>
+
       <section class="workspace-grid">
-        <form id="incomeForm" class="panel" autocomplete="off">
+        <form id="incomeForm" class="panel income-panel" autocomplete="off">
           <div class="panel-title">
             <h2>収入</h2>
             <button id="clearMonthButton" class="ghost-button" type="button">この期間を空にする</button>
@@ -76,7 +111,7 @@
           <button class="main-button" type="submit">収入を保存</button>
         </form>
 
-        <form id="fixedCostForm" class="panel" autocomplete="off">
+        <form id="fixedCostForm" class="panel fixed-panel" autocomplete="off">
           <div class="panel-title">
             <h2>固定費</h2>
             <span id="fixedCostCount" class="entry-count">0件</span>
@@ -95,7 +130,7 @@
           <div id="fixedCostList" class="mini-list" aria-label="固定費一覧"></div>
         </form>
 
-        <form id="expenseForm" class="panel" autocomplete="off">
+        <form id="expenseForm" class="panel expense-panel" autocomplete="off">
           <div class="panel-title">
             <h2>使ったお金</h2>
           </div>

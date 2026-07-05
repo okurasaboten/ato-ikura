@@ -1,6 +1,7 @@
 const storageKey = "ato-ikura-months";
 const fixedCostsKey = "__fixedCosts";
 const lunchBudget = 500;
+const foodBudget = 10000;
 
 const monthInput = document.querySelector("#monthInput");
 const periodLabel = document.querySelector("#periodLabel");
@@ -24,12 +25,18 @@ const remainingAmount = document.querySelector("#remainingAmount");
 const incomeAmount = document.querySelector("#incomeAmount");
 const fixedAmount = document.querySelector("#fixedAmount");
 const spentAmount = document.querySelector("#spentAmount");
+const foodBudgetStatus = document.querySelector("#foodBudgetStatus");
+const foodBudgetMeter = document.querySelector("#foodBudgetMeter");
 const spentMeter = document.querySelector("#spentMeter");
 const balanceTone = document.querySelector("#balanceTone");
+const mascotFace = document.querySelector("#mascotFace");
+const mascotMessage = document.querySelector("#mascotMessage");
 const entryCount = document.querySelector("#entryCount");
 const expenseTableBody = document.querySelector("#expenseTableBody");
 const expenseRowTemplate = document.querySelector("#expenseRowTemplate");
 const tablePanel = document.querySelector(".table-panel");
+const primaryBalanceCard = document.querySelector(".balance-card.primary");
+const foodBudgetPanel = document.querySelector(".food-budget-panel");
 
 let state = loadState();
 
@@ -129,6 +136,16 @@ function formatInputMoney(value) {
   return value ? new Intl.NumberFormat("ja-JP").format(value) : "";
 }
 
+function celebrate(element) {
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove("celebrate");
+  void element.offsetWidth;
+  element.classList.add("celebrate");
+}
+
 function formatMoney(value) {
   return new Intl.NumberFormat("ja-JP", {
     style: "currency",
@@ -142,12 +159,20 @@ function isLunchExpense(expense) {
   return target.includes("ランチ") || target.includes("昼食") || target.includes("昼ごはん");
 }
 
+function isFoodExpense(expense) {
+  return expense.category === "食費" || expense.category === "ランチ";
+}
+
+function isOverFoodSingleBudget(expense) {
+  return isFoodExpense(expense) && expense.amount >= lunchBudget;
+}
+
 function lunchBudgetStatus(expense) {
-  if (!isLunchExpense(expense)) {
+  if (!isFoodExpense(expense)) {
     return "";
   }
 
-  return expense.amount >= lunchBudget ? "ランチ予算超過" : "ランチ予算内";
+  return expense.amount >= lunchBudget ? "食費500円以上" : "食費500円未満";
 }
 
 function csvCell(value) {
@@ -178,9 +203,12 @@ function exportCurrentPeriodCsv() {
     ["固定費合計", totals.fixed],
     ["支出合計", totals.spent],
     ["残り使える金額", totals.remaining],
-    ["ランチ予算", lunchBudget],
+    ["食費予算", foodBudget],
+    ["食費使用額", totals.foodSpent],
+    ["食費残り", foodBudget - totals.foodSpent],
+    ["食費単品目安", lunchBudget],
     [],
-    ["種別", "日付", "内容", "カテゴリ", "金額", "ランチ判定"],
+    ["種別", "日付", "内容", "カテゴリ", "金額", "食費判定"],
   ];
 
   getFixedCosts().forEach((item) => {
@@ -207,13 +235,84 @@ function formatShortDate(value) {
 function totalsFor(periodData) {
   const fixedTotal = getFixedCosts().reduce((sum, item) => sum + item.amount, 0);
   const spent = periodData.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const foodSpent = periodData.expenses
+    .filter(isFoodExpense)
+    .reduce((sum, expense) => sum + expense.amount, 0);
 
   return {
     income: periodData.income,
     fixed: fixedTotal,
     spent,
+    foodSpent,
     used: fixedTotal + spent,
     remaining: periodData.income - fixedTotal - spent,
+  };
+}
+
+function mascotFor(totals, ratio) {
+  const pick = (messages) => messages[Math.floor(Math.random() * messages.length)];
+
+  if (totals.income === 0) {
+    return {
+      mood: "idle",
+      message: pick([
+        "まずは収入を入れてみよう",
+        "今月のスタート地点、決めていこ",
+        "収入を入れたら作戦会議スタート",
+        "ここから一緒に見守るよ",
+      ]),
+    };
+  }
+
+  if (totals.remaining < 0) {
+    return {
+      mood: "pinch",
+      message: pick([
+        "ちょっとオーバー。今日は守りの日にしよ",
+        "ここから巻き返せる。まず深呼吸",
+        "使いすぎサイン。今日はお財布を休ませよ",
+        "大丈夫、気づけた時点で勝ちに近い",
+        "次の一手は慎重にいこ",
+      ]),
+    };
+  }
+
+  if (ratio >= 85) {
+    return {
+      mood: "careful",
+      message: pick([
+        "残り少なめ。小さな出費に気をつけよ",
+        "ここは節約モードでスマートに",
+        "ラストスパート、無理なくいこ",
+        "今日は買う前に一拍おこ",
+        "まだ守れる範囲。落ち着いていこ",
+      ]),
+    };
+  }
+
+  if (ratio >= 55) {
+    return {
+      mood: "steady",
+      message: pick([
+        "いいペース。あと半分、落ち着いていこ",
+        "ちゃんと見えてる。管理うまいよ",
+        "ここからの調整がいい感じに効くよ",
+        "使うところは使って、締めるところは締めよ",
+        "順調。今日の選択もいい感じ",
+      ]),
+    };
+  }
+
+  return {
+    mood: "happy",
+    message: pick([
+      "まだ余裕あり。今日も上手に使えてるね",
+      "いい感じ。お財布に余白があるって最高",
+      "このペース、かなりきれい",
+      "上手にコントロールできてるよ",
+      "今日はちょっとごきげんに過ごせそう",
+      "余裕あり。小さなごほうびも計画的にね",
+    ]),
   };
 }
 
@@ -229,6 +328,9 @@ function render() {
   incomeAmount.textContent = formatMoney(totals.income);
   fixedAmount.textContent = formatMoney(totals.fixed);
   spentAmount.textContent = formatMoney(totals.spent);
+  foodBudgetStatus.textContent = `${formatMoney(totals.foodSpent)} / ${formatMoney(foodBudget)}`;
+  foodBudgetStatus.classList.toggle("over-budget", totals.foodSpent > foodBudget);
+  foodBudgetMeter.style.width = `${Math.min(100, (totals.foodSpent / foodBudget) * 100)}%`;
   spentMeter.style.width = `${ratio}%`;
   entryCount.textContent = `${periodData.expenses.length}件`;
 
@@ -243,6 +345,10 @@ function render() {
   } else {
     balanceTone.textContent = "まだ余裕があります";
   }
+
+  const mascot = mascotFor(totals, ratio);
+  mascotFace.className = `mascot-face ${mascot.mood}`;
+  mascotMessage.textContent = mascot.message;
 
   renderFixedCosts();
   renderExpenses(periodData.expenses);
@@ -292,7 +398,13 @@ function renderExpenses(expenses) {
       row.querySelector('[data-cell="category"]').textContent = expense.category;
       const amountCell = row.querySelector('[data-cell="amount"]');
       amountCell.textContent = formatMoney(expense.amount);
-      amountCell.classList.toggle("over-budget", isLunchExpense(expense) && expense.amount >= lunchBudget);
+      amountCell.classList.toggle("over-budget", isOverFoodSingleBudget(expense));
+      row.addEventListener("click", (event) => {
+        if (event.target.closest("button")) {
+          return;
+        }
+        row.classList.toggle("is-open");
+      });
       row.querySelector("button").addEventListener("click", () => deleteExpense(expense.id));
       expenseTableBody.append(row);
     });
@@ -325,6 +437,7 @@ incomeForm.addEventListener("submit", (event) => {
   periodData.income = parseMoney(incomeInput.value);
   saveState();
   render();
+  celebrate(primaryBalanceCard);
 });
 
 fixedCostForm.addEventListener("submit", (event) => {
@@ -348,6 +461,7 @@ fixedCostForm.addEventListener("submit", (event) => {
   fixedCostAmountInput.value = "";
   saveState();
   render();
+  celebrate(primaryBalanceCard);
   fixedCostNameInput.focus();
 });
 
@@ -379,6 +493,10 @@ expenseForm.addEventListener("submit", (event) => {
   expenseDateInput.value = todayValue();
   saveState();
   render();
+  celebrate(primaryBalanceCard);
+  if (isFoodExpense({ name, amount, category: expenseCategoryInput.value })) {
+    celebrate(foodBudgetPanel);
+  }
   expenseNameInput.focus();
 });
 
