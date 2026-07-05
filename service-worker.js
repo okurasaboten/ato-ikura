@@ -1,4 +1,4 @@
-const cacheName = "ato-ikura-v11";
+const cacheName = "ato-ikura-v12";
 const filesToCache = [
   "./",
   "./index.html",

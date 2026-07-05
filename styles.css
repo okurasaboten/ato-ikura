@@ -815,6 +815,10 @@ tr.is-open {
     margin-bottom: 10px;
   }
 
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
   .food-budget-panel {
     padding: 12px;
   }
@@ -826,16 +830,17 @@ tr.is-open {
   }
 
   .balance-card.primary {
-    min-height: 176px;
-    padding: 18px;
+    min-height: auto;
+    padding: 16px;
   }
 
   .balance-card.primary strong {
-    font-size: 42px;
+    font-size: clamp(30px, 10vw, 38px);
   }
 
   .hero-amount {
     gap: 10px;
+    align-items: flex-start;
   }
 
   .amount-icon {
@@ -844,18 +849,27 @@ tr.is-open {
   }
 
   .mascot-talk {
-    grid-template-columns: 58px minmax(0, 1fr);
+    grid-template-columns: 52px minmax(0, 1fr);
     gap: 8px;
   }
 
   .mascot-face {
-    width: 58px;
-    height: 58px;
-    border-radius: 18px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+
+  .mascot-talk p {
+    padding: 9px 10px;
+    font-size: 12px;
   }
 
   .balance-card:not(.primary) {
-    min-height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 70px;
     padding: 12px 10px;
   }
 
@@ -864,7 +878,14 @@ tr.is-open {
   }
 
   .balance-card:not(.primary) strong {
+    margin-top: 0;
     font-size: clamp(18px, 5.5vw, 22px);
+    text-align: right;
+  }
+
+  .food-budget-panel strong {
+    font-size: 16px;
+    overflow-wrap: anywhere;
   }
 
   .panel {

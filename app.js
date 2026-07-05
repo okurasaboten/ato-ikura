@@ -133,7 +133,7 @@ function parseMoney(value) {
 }
 
 function formatInputMoney(value) {
-  return value ? new Intl.NumberFormat("ja-JP").format(value) : "";
+  return value ? String(value) : "";
 }
 
 function celebrate(element) {
@@ -504,7 +504,7 @@ quickAmountButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const current = parseMoney(expenseAmountInput.value);
     const next = current + Number(button.dataset.quickAmount);
-    expenseAmountInput.value = formatInputMoney(next);
+    expenseAmountInput.value = String(next);
     expenseAmountInput.focus();
   });
 });
