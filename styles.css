@@ -172,6 +172,13 @@ select:focus {
   gap: 12px;
 }
 
+.panel-actions {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  gap: 10px;
+}
+
 .meter {
   width: 100%;
   height: 10px;
@@ -402,6 +409,11 @@ th {
   font-variant-numeric: tabular-nums;
 }
 
+.amount-cell.over-budget {
+  color: #c53224;
+  font-weight: 900;
+}
+
 .action-cell {
   width: 54px;
   text-align: right;
@@ -562,6 +574,11 @@ th {
     align-items: start;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .panel-actions {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .ghost-button {

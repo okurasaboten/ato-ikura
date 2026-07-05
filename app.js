@@ -1,5 +1,6 @@
 const storageKey = "ato-ikura-months";
 const fixedCostsKey = "__fixedCosts";
+const lunchBudget = 500;
 
 const monthInput = document.querySelector("#monthInput");
 const periodLabel = document.querySelector("#periodLabel");
@@ -18,6 +19,7 @@ const expenseCategoryInput = document.querySelector("#expenseCategoryInput");
 const quickAmountButtons = document.querySelectorAll("[data-quick-amount]");
 const clearMonthButton = document.querySelector("#clearMonthButton");
 const copyBalanceButton = document.querySelector("#copyBalanceButton");
+const exportCsvButton = document.querySelector("#exportCsvButton");
 const remainingAmount = document.querySelector("#remainingAmount");
 const incomeAmount = document.querySelector("#incomeAmount");
 const fixedAmount = document.querySelector("#fixedAmount");
@@ -135,6 +137,65 @@ function formatMoney(value) {
   }).format(value);
 }
 
+function isLunchExpense(expense) {
+  const target = `${expense.category} ${expense.name}`.toLowerCase();
+  return target.includes("ランチ") || target.includes("昼食") || target.includes("昼ごはん");
+}
+
+function lunchBudgetStatus(expense) {
+  if (!isLunchExpense(expense)) {
+    return "";
+  }
+
+  return expense.amount >= lunchBudget ? "ランチ予算超過" : "ランチ予算内";
+}
+
+function csvCell(value) {
+  const text = String(value ?? "");
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadCsv(filename, rows) {
+  const csv = rows.map((row) => row.map(csvCell).join(",")).join("\r\n");
+  const blob = new Blob([`\ufeff${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportCurrentPeriodCsv() {
+  const periodKey = getCurrentPeriod();
+  const periodData = getPeriodData(periodKey);
+  const totals = totalsFor(periodData);
+  const rows = [
+    ["期間", formatPeriodLabel(periodKey)],
+    ["収入", totals.income],
+    ["固定費合計", totals.fixed],
+    ["支出合計", totals.spent],
+    ["残り使える金額", totals.remaining],
+    ["ランチ予算", lunchBudget],
+    [],
+    ["種別", "日付", "内容", "カテゴリ", "金額", "ランチ判定"],
+  ];
+
+  getFixedCosts().forEach((item) => {
+    rows.push(["固定費", "", item.name, "固定費", item.amount, ""]);
+  });
+
+  [...periodData.expenses]
+    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt - b.createdAt)
+    .forEach((expense) => {
+      rows.push(["支出", expense.date, expense.name, expense.category, expense.amount, lunchBudgetStatus(expense)]);
+    });
+
+  downloadCsv(`ato-ikura-${periodKey}.csv`, rows);
+}
+
 function formatShortDate(value) {
   const date = new Date(`${value}T00:00:00`);
   return new Intl.DateTimeFormat("ja-JP", {
@@ -229,7 +290,9 @@ function renderExpenses(expenses) {
       row.querySelector('[data-cell="date"]').textContent = formatShortDate(expense.date);
       row.querySelector('[data-cell="name"]').textContent = expense.name;
       row.querySelector('[data-cell="category"]').textContent = expense.category;
-      row.querySelector('[data-cell="amount"]').textContent = formatMoney(expense.amount);
+      const amountCell = row.querySelector('[data-cell="amount"]');
+      amountCell.textContent = formatMoney(expense.amount);
+      amountCell.classList.toggle("over-budget", isLunchExpense(expense) && expense.amount >= lunchBudget);
       row.querySelector("button").addEventListener("click", () => deleteExpense(expense.id));
       expenseTableBody.append(row);
     });
@@ -358,6 +421,8 @@ copyBalanceButton.addEventListener("click", async () => {
     alert(text);
   }
 });
+
+exportCsvButton.addEventListener("click", exportCurrentPeriodCsv);
 
 render();
 
